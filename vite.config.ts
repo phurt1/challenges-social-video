@@ -4,6 +4,8 @@ import path from "path";
 
 // https://vitejs.dev/config/
 export default defineConfig(({ mode }) => ({
+  base: '/challenges-social-video/', // <-- change to match your GitHub 
+ 
   server: {
     host: "::",
     port: 8080,
