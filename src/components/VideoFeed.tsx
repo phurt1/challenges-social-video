@@ -53,7 +53,6 @@ const VideoFeed: React.FC<VideoFeedProps> = ({
       return newSet;
     });
     
-    // Simulate retry delay
     setTimeout(() => {
       setRetryingVideos(prev => {
         const newSet = new Set(prev);
@@ -67,6 +66,42 @@ const VideoFeed: React.FC<VideoFeedProps> = ({
     if (onRefresh) {
       setVideoErrors(new Set());
       await onRefresh();
+    }
+  };
+
+  const handleShare = async (videoId: string) => {
+    try {
+      // Check if Web Share API is supported and available
+      if (navigator.share && navigator.canShare) {
+        const shareData = {
+          title: 'Check out this challenge video!',
+          text: 'Amazing challenge video from our app',
+          url: window.location.href
+        };
+        
+        // Check if the data can be shared
+        if (navigator.canShare(shareData)) {
+          await navigator.share(shareData);
+          onShare(videoId);
+          return;
+        }
+      }
+      
+      // Fallback: copy to clipboard
+      await navigator.clipboard.writeText(window.location.href);
+      onShare(videoId);
+      
+      // Show a simple notification
+      const notification = document.createElement('div');
+      notification.textContent = 'Link copied to clipboard!';
+      notification.className = 'fixed top-4 left-1/2 transform -translate-x-1/2 bg-green-600 text-white px-4 py-2 rounded-lg z-50';
+      document.body.appendChild(notification);
+      setTimeout(() => document.body.removeChild(notification), 2000);
+      
+    } catch (error) {
+      console.warn('Share failed:', error);
+      // Still call onShare to update the count
+      onShare(videoId);
     }
   };
 
@@ -162,7 +197,6 @@ const VideoFeed: React.FC<VideoFeedProps> = ({
                         </div>
                       )}
                       
-                      {/* User info overlay */}
                       <div className="absolute bottom-4 left-4 right-16">
                         <div className="flex items-center space-x-3 mb-2">
                           <Avatar className="w-10 h-10 border-2 border-white">
@@ -174,7 +208,6 @@ const VideoFeed: React.FC<VideoFeedProps> = ({
                         <p className="text-white text-sm leading-tight">{video.description}</p>
                       </div>
                       
-                      {/* Action buttons */}
                       <div className="absolute right-4 bottom-20 space-y-4">
                         <button
                           onClick={() => onLike(video.id)}
@@ -198,7 +231,7 @@ const VideoFeed: React.FC<VideoFeedProps> = ({
                         </button>
                         
                         <button
-                          onClick={() => onShare(video.id)}
+                          onClick={() => handleShare(video.id)}
                           className="flex flex-col items-center space-y-1 text-white transition-colors hover:text-gray-300"
                           aria-label={`Share video by ${video.username}`}
                         >
